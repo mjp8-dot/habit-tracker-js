@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header id = "box">
+        <h1 class = "title">Daily Habit Tracker</h1>
+        <div class="theme">
+            <button class = "theme-btn">Dark</button>
+            <button class = "theme-btn">Light</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="progressbox">
+            <h1 class = "title">Todays Progress</h1>
+
+            <div class="display">
+                <div class="completed"></div>
+                <div class="incomplete"></div>
+
+            </div>
+        </div>
+
+        <div class="habittracker">
+        </div>
+
+        <div class="editbox">
+            <button class = "editbtn">Add Habit</button>
+        </div>
+    </main>
+
+    <script>
+        const darkbtn = document.querySelectorAll(".theme-btn")[0];
+        const lightbtn = document.querySelectorAll(".theme-btn")[1];
+        const themebtns = document.querySelectorAll(".theme-btn");
+        const add = document.querySelectorAll(".editbtn")[0];
+        const editbox = document.querySelector(".editbox")
+        const habittracker = document.querySelector(".habittracker")
+
+        function opacity(){
+            const completedHabits =
+                document.querySelectorAll(
+                    ".newHabit.completed"
+                );
+
+            const incompleteHabits =
+                document.querySelectorAll(
+                    ".newHabit:not(.completed)"
+                );
+
+            completedHabits.forEach(habit => {
+                habit.style.opacity = "0.4";
+            });
+
+            incompleteHabits.forEach(habit => {
+                habit.style.opacity = "1";
+            });
+        }
+
+
+        function progressbarmanager() {
+
+            const habits =
+                JSON.parse(
+                    localStorage.getItem("habits")
+                ) || [];
+
+            const totalHabits =
+                habits.length;
+
+            const completedHabits =
+                habits.filter(
+                    habit => habit.completed
+                ).length;
+
+            const progressPercentage =
+                totalHabits === 0
+                    ? 0
+                    : (completedHabits / totalHabits) * 100;
+
+            const display = document.querySelector(".display");
+            display.style.gridTemplateColumns = `${progressPercentage}% auto`;
+
+}
+
+        function updatelocalstorage(habitName) {
+
+            const habits =
+                JSON.parse(
+                    localStorage.getItem("habits")
+                ) || [];
+
+            habits.push({
+                name: habitName,
+                completed: false
+            });
+
+            localStorage.setItem(
+                "habits",
+                JSON.stringify(habits)
+            );
+
+            opacity();
+
+}
+
+        function getHabitsFromLocalStorage() {
+
+                const habits =
+                    JSON.parse(
+                        localStorage.getItem("habits")
+                    ) || [];
+
+                const habittracker =
+                    document.querySelector(".habittracker");
+
+                habits.forEach(function(habit) {
+
+                    const habitDiv =
+                        document.createElement("div");
+
+                    habitDiv.classList.add("newHabit");
+
+                    if(habit.completed){
+                        habitDiv.classList.add("completed");
+                    }
+
+                    habitDiv.textContent =
+                        habit.name;
+
+                    const buttons =
+                        document.createElement("div");
+
+                    buttons.classList.add("buttons");
+
+                    buttons.innerHTML = `
+                        <button class="btndone">✓</button>
+                        <button class="btnremove">🗑️</button>
+                    `;
+
+                    habitDiv.appendChild(buttons);
+
+                    const btndone =
+                        buttons.querySelector(".btndone");
+
+                        btndone.addEventListener("click", function(){
+
+                        finishHabit(habitDiv);
+
+                    });
+
+                    const btnremove =
+                         buttons.querySelector(".btnremove");
+                         console.log("delete button event triggered")
+
+                        btnremove.addEventListener("click", function(){
+                            removeHabit(habitDiv);
+                        });
+
+                    habittracker.appendChild(habitDiv);
+
+                });
+                    opacity();
+                    progressbarmanager();
+
+}
+
+        function clearLocalStorage() {
+            localStorage.removeItem("habits");
+            progressbarmanager();
+            opacity();
+        }
+
+        function updateCompletedStatus(newHabit){
+
+            const habits =
+                JSON.parse(
+                    localStorage.getItem("habits")
+                ) || [];
+
+            const habitName =
+                newHabit.firstChild.textContent;
+
+            habits.forEach(function(habit){
+
+                if(habit.name === habitName){
+
+                    habit.completed =
+                        newHabit.classList.contains(
+                            "completed"
+                        );
+
+                }
+
+            });
+
+            localStorage.setItem(
+                "habits",
+                JSON.stringify(habits)
+            );
+
+            // i need make the opacity of the completed habits 0.5 and the incomplete habits 1. this will help the user to easily identify the completed habits and the incomplete habits.
+            opacity();
+
+            progressbarmanager();
+}
+
+
+
+        function finishHabit(newHabit){
+
+            newHabit.classList.toggle(
+                "completed"
+            );
+
+            updateCompletedStatus(
+                newHabit
+            );
+        }
+
+        function removeHabit(newHabit){
+
+            const habits =
+                JSON.parse(
+                    localStorage.getItem("habits")
+                ) || [];
+
+            const habitName =
+                newHabit.firstChild.textContent;
+
+            const updatedHabits =
+                habits.filter(
+                    habit => habit.name !== habitName
+                );
+
+            localStorage.setItem(
+                "habits",
+                JSON.stringify(updatedHabits)
+            );
+
+            newHabit.remove();
+            progressbarmanager();
+            opacity();
+        }
+
+
+
+
+
+        getHabitsFromLocalStorage();
+        darkbtn.addEventListener("click", function(){
+            console.log("Dark mode activated");
+            document.body.style.backgroundColor = "rgb(0, 4, 40)";
+            document.body.style.color = "white";
+            themebtns.forEach(function(btn) {
+                btn.style.boxShadow = "0px 0px 5px grey;"
+            })
+        });
+
+        lightbtn.addEventListener("click", function() {
+           
+            console.log("Light Mode Activated")
+            document.body.style.backgroundColor = "wheat";
+            document.body.style.color = "black";
+            themebtns.forEach(function(btn) {
+                btn.style.boxShadow = "0px 0px 10px black"
+            })
+        })
+        
+
+        add.addEventListener("click", function() {
+            if (editbox.children.length === 1) {
+            
+            const habitname = document.createElement("input");
+            habitname.setAttribute("type", "text");
+            habitname.setAttribute("placeholder", "Enter Habit Name");
+            habitname.classList.add("habitname");
+            editbox.appendChild(habitname)
+
+            habitname.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    console.log("new habit triggered")
+                    const newHabit = document.createElement("div")
+                    newHabit.classList.add("newHabit")
+                    const habitvalue = habitname.value.trim();
+                    newHabit.textContent = habitvalue
+                    
+
+                    const buttons = document.createElement("div");
+                    buttons.classList.add("buttons");
+                    buttons.innerHTML = (`
+                        <button class="btndone">✓</button>
+                        <button class="btnremove">🗑️</button>
+                    `);
+                    newHabit.appendChild(buttons);
+
+                    habittracker.appendChild(newHabit)
+
+                    updatelocalstorage(habitvalue); console.log("habit added to local storage")
+                    editbox.removeChild(habitname); console.log("input removed from editbox")
+
+                    const btndone = buttons.querySelector(".btndone");
+                    const btnremove = buttons.querySelector(".btnremove");
+
+                    btndone.addEventListener("click", function() {
+                        finishHabit(newHabit);
+                    })
+
+                    btnremove.addEventListener("click", function() {
+                        removeHabit(newHabit)
+                    })
+
+                }
+
+            })
+        }
+
+        
+
+
+        })
+
+        // clearLocalStorage() 
+        //  I created this funtion to help me with the devolopment process.
+        
+    </script>
+    
+</body>
+</html>
+
+
